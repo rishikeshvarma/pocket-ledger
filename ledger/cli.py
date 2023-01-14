@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from ledger.report import category_table
 from ledger.store import Ledger
 
 
@@ -12,6 +13,7 @@ def build_parser():
     a.add_argument("category")
     a.add_argument("note", nargs="?", default="")
     sub.add_parser("list", help="show every expense")
+    sub.add_parser("total", help="totals per category")
     return p
 
 
@@ -25,6 +27,8 @@ def main(argv=None, ledger=None):
     elif args.cmd == "list":
         for e in ledger.entries:
             print(f"{e['at']}  {e['category']:<12} {e['amount']:>8.2f}  {e['note']}")
+    elif args.cmd == "total":
+        print(category_table(ledger.entries))
     return 0
 
 
