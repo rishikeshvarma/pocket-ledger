@@ -5,6 +5,7 @@ import unittest
 from contextlib import redirect_stdout
 
 from ledger.cli import main
+from ledger.config import merge
 from ledger.report import category_table, totals_by_category
 from ledger.store import Ledger
 
@@ -43,6 +44,9 @@ class LedgerTest(unittest.TestCase):
         with redirect_stdout(buf):
             main(["add", "30", "chai"], ledger=self.ledger)
         self.assertIn("added 30.0 to chai", buf.getvalue())
+
+    def test_merge_nested(self):
+        self.assertEqual(merge({"a": {"x": 1}}, {"a": {"y": 2}}), {"a": {"x": 1, "y": 2}})
 
 
 if __name__ == "__main__":

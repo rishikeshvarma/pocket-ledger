@@ -1,8 +1,15 @@
 import argparse
 import sys
+from distutils.util import strtobool
 
+from ledger.config import load_config
 from ledger.report import category_table
 from ledger.store import Ledger
+
+
+def confirm(question):
+    answer = input(f"{question} [y/N] ").strip() or "n"
+    return bool(strtobool(answer))
 
 
 def build_parser():
@@ -14,12 +21,16 @@ def build_parser():
     a.add_argument("note", nargs="?", default="")
     sub.add_parser("list", help="show every expense")
     sub.add_parser("total", help="totals per category")
+    c = sub.add_parser("clear", help="delete every expense")
+    c.add_argument("--yes", action="store_true")
+    # TODO: export --csv for my parents
     return p
 
 
 def main(argv=None, ledger=None):
     args = build_parser().parse_args(argv)
-    ledger = ledger or Ledger()
+    cfg = load_config()
+    ledger = ledger or Ledger(cfg["path"])
     if args.cmd == "add":
         e = ledger.add(args.amount, args.category, args.note)
         ledger.save()
@@ -28,7 +39,12 @@ def main(argv=None, ledger=None):
         for e in ledger.entries:
             print(f"{e['at']}  {e['category']:<12} {e['amount']:>8.2f}  {e['note']}")
     elif args.cmd == "total":
-        print(category_table(ledger.entries))
+        print(category_table(ledger.entries, cfg["currency"]))
+    elif args.cmd == "clear":
+        if args.yes or confirm("Delete every expense?"):
+            ledger.entries = []
+            ledger.save()
+            print("cleared")
     return 0
 
 
