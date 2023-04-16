@@ -2,6 +2,7 @@ import argparse
 import sys
 from distutils.util import strtobool
 
+from ledger.budget import check_budgets
 from ledger.config import load_config
 from ledger.report import category_table
 from ledger.store import Ledger
@@ -23,6 +24,7 @@ def build_parser():
     sub.add_parser("total", help="totals per category")
     c = sub.add_parser("clear", help="delete every expense")
     c.add_argument("--yes", action="store_true")
+    sub.add_parser("budget", help="how this month compares with your budgets")
     # TODO: export --csv for my parents
     return p
 
@@ -45,6 +47,10 @@ def main(argv=None, ledger=None):
             ledger.entries = []
             ledger.save()
             print("cleared")
+    elif args.cmd == "budget":
+        # TODO: print a nice table instead of raw lines
+        for line in check_budgets(ledger.entries, cfg.get("budgets", {})):
+            print(line)
     return 0
 
 
