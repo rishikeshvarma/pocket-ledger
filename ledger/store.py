@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 DEFAULT_PATH = os.path.expanduser("~/.pocket-ledger.json")
 
@@ -18,7 +18,7 @@ class Ledger:
             "amount": round(float(amount), 2),
             "category": category.lower(),
             "note": note,
-            "at": datetime.utcnow().isoformat(timespec="seconds"),
+            "at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(timespec="seconds"),
         }
         self.entries.append(entry)
         return entry

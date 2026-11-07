@@ -1,6 +1,6 @@
 import argparse
+import csv
 import sys
-from distutils.util import strtobool
 
 from ledger.budget import check_budgets
 from ledger.config import load_config
@@ -9,8 +9,9 @@ from ledger.store import Ledger
 
 
 def confirm(question):
-    answer = input(f"{question} [y/N] ").strip() or "n"
-    return bool(strtobool(answer))
+    """Yes only for an explicit yes; anything else, including Enter, is no."""
+    answer = input(f"{question} [y/N] ").strip().lower()
+    return answer in ("y", "yes")
 
 
 def build_parser():
@@ -25,8 +26,24 @@ def build_parser():
     c = sub.add_parser("clear", help="delete every expense")
     c.add_argument("--yes", action="store_true")
     sub.add_parser("budget", help="how this month compares with your budgets")
-    # TODO: export --csv for my parents
+    x = sub.add_parser("export", help="write every expense out as CSV")
+    x.add_argument("--csv", metavar="FILE", default="-",
+                   help="file to write, or - for the screen (the default)")
     return p
+
+
+CSV_FIELDS = ["at", "category", "amount", "note"]
+
+
+def write_csv(entries, out):
+    writer = csv.DictWriter(out, fieldnames=CSV_FIELDS, extrasaction="ignore", lineterminator="\n")
+    writer.writeheader()
+    for e in entries:
+        row = {k: e.get(k, "") for k in CSV_FIELDS}
+        # A leading = + - @ makes spreadsheets run the cell as a formula.
+        if str(row["note"])[:1] in ("=", "+", "-", "@"):
+            row["note"] = "'" + str(row["note"])
+        writer.writerow(row)
 
 
 def main(argv=None, ledger=None):
@@ -51,6 +68,13 @@ def main(argv=None, ledger=None):
         # TODO: print a nice table instead of raw lines
         for line in check_budgets(ledger.entries, cfg.get("budgets", {})):
             print(line)
+    elif args.cmd == "export":
+        if args.csv == "-":
+            write_csv(ledger.entries, sys.stdout)
+        else:
+            with open(args.csv, "w", newline="", encoding="utf-8") as f:
+                write_csv(ledger.entries, f)
+            print(f"exported {len(ledger.entries)} expenses to {args.csv}")
     return 0
 
 
