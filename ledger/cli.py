@@ -1,6 +1,5 @@
 import argparse
 import sys
-from distutils.util import strtobool
 
 from ledger.budget import check_budgets
 from ledger.config import load_config
@@ -9,8 +8,9 @@ from ledger.store import Ledger
 
 
 def confirm(question):
-    answer = input(f"{question} [y/N] ").strip() or "n"
-    return bool(strtobool(answer))
+    """Yes only for an explicit yes; anything else, including Enter, is no."""
+    answer = input(f"{question} [y/N] ").strip().lower()
+    return answer in ("y", "yes")
 
 
 def build_parser():

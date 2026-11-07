@@ -45,6 +45,17 @@ class LedgerTest(unittest.TestCase):
             main(["add", "30", "chai"], ledger=self.ledger)
         self.assertIn("added 30.0 to chai", buf.getvalue())
 
+    def test_saved_time_keeps_the_old_format(self):
+        at = self.ledger.add(1, "x")["at"]
+        self.assertRegex(at, r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
+
+    def test_confirm_needs_an_explicit_yes(self):
+        from unittest import mock
+        from ledger.cli import confirm
+        for answer, expected in [("y", True), ("YES", True), ("", False), ("n", False), ("maybe", False)]:
+            with mock.patch("builtins.input", return_value=answer):
+                self.assertEqual(confirm("?"), expected, answer)
+
     def test_merge_nested(self):
         self.assertEqual(merge({"a": {"x": 1}}, {"a": {"y": 2}}), {"a": {"x": 1, "y": 2}})
 

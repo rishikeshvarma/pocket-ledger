@@ -1,6 +1,6 @@
 import json
 import os
-from collections import Mapping
+from collections.abc import Mapping
 
 CONFIG_PATH = os.path.expanduser("~/.pocket-ledgerrc.json")
 DEFAULTS = {"currency": "Rs", "path": os.path.expanduser("~/.pocket-ledger.json"), "budgets": {}}
